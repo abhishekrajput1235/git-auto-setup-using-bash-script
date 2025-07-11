@@ -59,6 +59,7 @@ fi
 # Add and commit changes
 echo "➕ Adding changes..."
 git add .
+git status
 
 # Commit only if there are staged changes
 if git diff --cached --quiet; then
@@ -72,4 +73,4 @@ fi
 echo "🚀 Pushing to origin/$branch_name"
 git push -u origin $branch_name
 
-echo "🎉 Git automation complete!"
+echo "🎉🎉🎉 Your project push successfully on github! 🎉🎉🎉"
