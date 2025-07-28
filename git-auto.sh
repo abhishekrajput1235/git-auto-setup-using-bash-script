@@ -26,7 +26,24 @@ if [[ -z $(git status --porcelain) ]]; then
   exit 0
 fi
 
-# Stash uncommitted changes (if any)
+# Ask to change remote origin
+if git remote | grep -q origin; then
+  read -p "❓ Do you want to change the remote 'origin'? (yes/no): " change_remote
+  if [[ "$change_remote" == "yes" || "$change_remote" == "y" ]]; then
+    git remote remove origin
+    read -p "🔗 Enter new remote Git URL: " remote_url
+    git remote add origin "$remote_url"
+    echo "✅ Remote 'origin' changed."
+  else
+    echo "⏩ Keeping existing remote origin."
+  fi
+else
+  read -p "🔗 No remote 'origin' found. Enter remote Git URL to add: " remote_url
+  git remote add origin "$remote_url"
+  echo "✅ Remote 'origin' added."
+fi
+
+# Stash uncommitted changes
 echo "🧳 Stashing uncommitted changes..."
 git stash push -m "Auto stash before pull & commit"
 stash_applied=true
@@ -40,17 +57,14 @@ else
   git checkout -b "$branch_name"
 fi
 
-# Check for remote origin
-if ! git remote | grep -q origin; then
-  echo "❌ No remote 'origin' found."
-  read -p "🔗 Enter remote Git URL: " remote_url
-  git remote add origin "$remote_url"
-  echo "✅ Remote 'origin' added."
+# Ask if user wants to pull before commit
+read -p "🔄 Do you want to pull the latest changes from origin/$branch_name before committing? (yes/no): " do_pull
+if [[ "$do_pull" == "yes" || "$do_pull" == "y" ]]; then
+  echo "⬇️ Pulling latest changes from origin/$branch_name..."
+  git pull origin "$branch_name" --rebase --allow-unrelated-histories
+else
+  echo "⏩ Skipping pull as requested."
 fi
-
-# Pull latest changes with rebase and allow unrelated histories
-echo "⬇️ Pulling latest changes from origin/$branch_name..."
-git pull origin "$branch_name" --rebase --allow-unrelated-histories
 
 # Restore stashed changes
 if [ "$stash_applied" = true ]; then
